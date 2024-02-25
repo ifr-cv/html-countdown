@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>倒计时</title>
+  </head>
+
+  <body style="overflow: hidden">
+    <img
+      id="bg"
+      style="
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: -1;
+      "
+      src="{{{{assets/倒计时.png}}}}"
+    />
+    <div
+      id="time"
+      style="
+        position: absolute;
+        left: 50vw;
+        top: 55vh;
+        color: #fff;
+        transform: translate(-50%, -50%);
+        font-size: 4.5em;
+        white-space: nowrap;
+        text-align: center;
+        font-family: Monaco;
+      "
+    >
+      00:00
+    </div>
+    <div
+      id="setting"
+      style="
+        right: 0;
+        bottom: 0;
+        color: #999;
+        position: fixed;
+        z-index: 999;
+        cursor: pointer;
+      "
+    >
+      Set
+    </div>
+
+    <div
+      id="title"
+      style="
+        top: calc(100vh / 1067 * 324);
+        color: white;
+        left: 5px;
+        position: fixed;
+        z-index: 2;
+        cursor: pointer;
+        font-size: 3rem;
+        font-weight: bold;
+      "
+    >
+      距离比赛出发还有
+    </div>
+    <div
+      id="menu"
+      style="
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        color: white;
+        position: fixed;
+        display: none;
+        z-index: 998;
+        background-color: #000000cc;
+      "
+    >
+      <div
+        style="
+          width: 50vw;
+          height: 50vh;
+          left: 25vw;
+          top: 25vh;
+          position: fixed;
+          background-color: #fff;
+          color: black;
+          border-radius: 5px;
+        "
+      >
+        <div style="margin: 10px; height: 100%; overflow-y: auto">
+          <h5>目标时间</h5>
+          <label for="year">Year:</label>
+          <input type="number" id="year" name="year" required />
+          <br />
+          <label for="month">Month (1-12):</label>
+          <input
+            type="number"
+            id="month"
+            name="month"
+            min="1"
+            max="12"
+            required
+          />
+          <br />
+          <label for="day">Day:</label>
+          <input type="number" id="day" name="day" required />
+          <br />
+          <label for="hour">Hour (0-23):</label>
+          <input
+            type="number"
+            id="hour"
+            name="hour"
+            min="0"
+            max="23"
+            required
+          />
+          <br />
+          <label for="minute">Minute:</label>
+          <input
+            type="number"
+            id="minute"
+            name="minute"
+            min="0"
+            max="59"
+            required
+          />
+          <br /><br />
+          <h5>倒计时标题</h5>
+          <label for="title_set">Title:</label>
+          <input type="text" id="title_set" name="title" required />
+          <br /><br />
+          <button id="reset_btn">重置</button>
+          <button id="calculateTimestamp">设置</button>
+
+          <br /><br />
+          <div style="text-align: center; width: 100%">
+            版权所有 © 2024 NCUT DreamTeam Yuanlu。保留所有权利。
+          </div>
+          <br /><br />
+          <br /><br />
+        </div>
+      </div>
+    </div>
+    <script>
+      (() => {
+        const node = document.getElementById("setting");
+        const menu = document.getElementById("menu");
+        const calculateTimestamp_btn =
+          document.getElementById("calculateTimestamp");
+        let showing = false;
+        document.getElementById("reset_btn").addEventListener("click", () => {
+          localStorage.setItem("time", Date.now().toString());
+          localStorage.setItem("title", "距离比赛出发还有");
+
+          load_value();
+        });
+        menu.addEventListener("click", (e) => {
+          if (e.target != menu) return;
+          showing = false;
+          load_value();
+          menu.style.display = showing ? "block" : "none";
+        });
+        node.addEventListener("click", () => {
+          showing = !showing;
+          load_value();
+          menu.style.display = showing ? "block" : "none";
+        });
+        calculateTimestamp_btn.addEventListener("click", () => {
+          showing = !showing;
+          menu.style.display = showing ? "block" : "none";
+
+          var year = document.getElementById("year").value;
+          var month = document.getElementById("month").value - 1; // Adjust for zero-based index
+          var day = document.getElementById("day").value;
+          var hour = document.getElementById("hour").value;
+          var minute = document.getElementById("minute").value;
+
+          var targetDate = new Date(year, month, day, hour, minute);
+          var timestamp = targetDate.getTime();
+          console.log(
+            "time",
+            targetDate,
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            timestamp
+          );
+
+          localStorage.setItem("time", timestamp.toString());
+          localStorage.setItem(
+            "title",
+            document.getElementById("title_set").value
+          );
+
+          load_value();
+          location.reload();
+        });
+        function load_value() {
+          let time = localStorage.getItem("time")
+            ? parseInt(localStorage.getItem("time"))
+            : null;
+          if (time) {
+            const date = new Date(time);
+            document.getElementById("year").value = date.getFullYear();
+            document.getElementById("month").value = (
+              "0" +
+              (date.getMonth() + 1)
+            ).slice(-2); // 月份从0开始，因此需要+1，并且确保两位数格式
+            document.getElementById("day").value = ("0" + date.getDate()).slice(
+              -2
+            ); // 确保两位数格式
+            document.getElementById("hour").value = (
+              "0" + date.getHours()
+            ).slice(-2); // 确保两位数格式
+            document.getElementById("minute").value = (
+              "0" + date.getMinutes()
+            ).slice(-2); // 确保两位数格式
+          }
+          let title = localStorage.getItem("title");
+          if (title) {
+            console.log(title);
+            document.getElementById("title_set").value = title;
+            document.getElementById("title").innerText = title;
+          }
+        }
+        load_value();
+      })();
+    </script>
+    <script>
+      (() => {
+        let date = localStorage.getItem("time");
+        if (!date || Number(date) < Date.now() - 86400 * 1e3 || isNaN(date)) {
+          document.getElementById("time").innerHTML = "点击右下角'Set'配置";
+          return;
+        }
+        // let target = new Date(2023, 3, 11, 23, 30).getTime();
+        let target = Number(date);
+        let fix = (s, f, l) =>
+          l < 0 ? s : (f.repeat(l) + s).substring(s.length);
+        let lst_color = true,
+          lst_update = 0;
+        let chufa_cnt = Number.MAX_SAFE_INTEGER;
+        let inter = setInterval(() => {
+          let now = new Date().getTime();
+          let time = target - now;
+          let dis = true;
+          if (time <= 0) {
+            const time = document.getElementById("time");
+            if (chufa_cnt > 3) {
+              time.style.fontWeight = `${(Math.random() * 800 + 200) | 0}`;
+            }
+            if (chufa_cnt++ < 10) {
+              return;
+            }
+            chufa_cnt = 0;
+            time.innerHTML = "出发!";
+            time.style.fontSize = "9em";
+            time.style.color = "white";
+            var randomColor =
+              "rgb(" +
+              Math.floor(Math.random() * 256) +
+              "," +
+              Math.floor(Math.random() * 256) +
+              "," +
+              Math.floor(Math.random() * 256) +
+              ")";
+            time.style.color = randomColor;
+            // clearInterval(inter);
+            return;
+          }
+          let arr = [1000, 60, 60, 24, 1024]
+            .map((x) => {
+              let y = time % x;
+              time = (time / x) | 0;
+              return y;
+            })
+            .reverse();
+          let str = [
+            [-1, "天"],
+            [2, "时"],
+            [2, "分<br/>"],
+            [2, "秒"],
+            [3, "毫秒"],
+          ]
+            .map((x, i) => {
+              if (dis && arr[i] <= 0) return "";
+              else {
+                dis = false;
+                return `${fix(`${arr[i]}`, "0", x[0])} ${x[1]}`;
+              }
+            })
+            .join(" ");
+          document.getElementById("time").innerHTML = `${str.substring(
+            0,
+            str.length
+          )}`;
+          if (target - now < 1000 * 60 * 60 * 24) {
+            if (now - lst_update > 1000) {
+              lst_update = now;
+              document.getElementById("time").style.color = (lst_color =
+                !lst_color)
+                ? "#fff"
+                : "red";
+            }
+          }
+        }, 1);
+      })();
+    </script>
+  </body>
+</html>
