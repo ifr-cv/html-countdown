@@ -130,6 +130,23 @@
           <label for="title_set">Title:</label>
           <input type="text" id="title_set" name="title" required />
           <br /><br />
+          <h5>闪烁设置</h5>
+          <label for="input_flicker_time">开始闪烁(ms):</label>
+          <input
+            type="number"
+            id="input_flicker_time"
+            name="flicker_time"
+            required
+          />
+          <br />
+          <label for="input_flicker_period">闪烁频率(ms):</label>
+          <input
+            type="number"
+            id="input_flicker_period"
+            name="flicker_period"
+            required
+          />
+          <br /><br />
           <button id="reset_btn">重置</button>
           <button id="calculateTimestamp">设置</button>
 
@@ -144,7 +161,6 @@
     </div>
     <script>
       (() => {
-        const node = document.getElementById("setting");
         const menu = document.getElementById("menu");
         const calculateTimestamp_btn =
           document.getElementById("calculateTimestamp");
@@ -152,6 +168,12 @@
         document.getElementById("reset_btn").addEventListener("click", () => {
           localStorage.setItem("time", Date.now().toString());
           localStorage.setItem("title", "距离比赛出发还有");
+          localStorage.setItem(
+            "flicker_time",
+            (1000 * 60 * 60 * 24).toString()
+          );
+          localStorage.setItem("flicker_period", (1000).toString());
+          localStorage.setItem("inited", "true");
 
           load_value();
         });
@@ -161,8 +183,10 @@
           load_value();
           menu.style.display = showing ? "block" : "none";
         });
-        node.addEventListener("click", () => {
+        document.getElementById("setting").addEventListener("click", () => {
           showing = !showing;
+          if (!localStorage.getItem("inited"))
+            document.getElementById("reset_btn").click();
           load_value();
           menu.style.display = showing ? "block" : "none";
         });
@@ -193,6 +217,14 @@
           localStorage.setItem(
             "title",
             document.getElementById("title_set").value
+          );
+          localStorage.setItem(
+            "flicker_time",
+            document.getElementById("input_flicker_time").value
+          );
+          localStorage.setItem(
+            "flicker_period",
+            document.getElementById("input_flicker_period").value
           );
 
           load_value();
@@ -225,28 +257,43 @@
             document.getElementById("title_set").value = title;
             document.getElementById("title").innerText = title;
           }
+          let flicker_time = localStorage.getItem("flicker_time");
+          if (flicker_time)
+            document.getElementById("input_flicker_time").value = flicker_time;
+          let flicker_period = localStorage.getItem("flicker_period");
+          if (flicker_period)
+            document.getElementById("input_flicker_period").value =
+              flicker_period;
         }
         load_value();
       })();
     </script>
     <script>
       (() => {
-        let date = localStorage.getItem("time");
-        if (!date || Number(date) < Date.now() - 86400 * 1e3 || isNaN(date)) {
+        const date = localStorage.getItem("time");
+        const flicker_time =
+          localStorage.getItem("flicker_time") ?? 1000 * 60 * 60 * 24;
+        const flicker_period = localStorage.getItem("flicker_period") ?? 1000;
+        if (
+          !date ||
+          Number(date) < Date.now() - 86400 * 1e3 ||
+          isNaN(date) ||
+          !flicker_time ||
+          !flicker_period
+        ) {
           document.getElementById("time").innerHTML = "点击右下角'Set'配置";
           return;
         }
         // let target = new Date(2023, 3, 11, 23, 30).getTime();
-        let target = Number(date);
-        let fix = (s, f, l) =>
+        const target = Number(date);
+        const fix = (s, f, l) =>
           l < 0 ? s : (f.repeat(l) + s).substring(s.length);
         let lst_color = true,
           lst_update = 0;
         let chufa_cnt = Number.MAX_SAFE_INTEGER;
-        let inter = setInterval(() => {
-          let now = new Date().getTime();
+        const inter = setInterval(() => {
+          const now = new Date().getTime();
           let time = target - now;
-          let dis = true;
           if (time <= 0) {
             const time = document.getElementById("time");
             if (chufa_cnt > 3) {
@@ -278,27 +325,31 @@
               return y;
             })
             .reverse();
-          let str = [
+          const str = ((x) => {
+            let dis = true;
+            return x
+              .map((x, i) => {
+                if (dis && arr[i] <= 0) return "";
+                else {
+                  dis = false;
+                  return `${fix(`${arr[i]}`, "0", x[0])} ${x[1]}`;
+                }
+              })
+              .join(" ");
+          })([
             [-1, "天"],
             [2, "时"],
             [2, "分<br/>"],
             [2, "秒"],
             [3, "毫秒"],
-          ]
-            .map((x, i) => {
-              if (dis && arr[i] <= 0) return "";
-              else {
-                dis = false;
-                return `${fix(`${arr[i]}`, "0", x[0])} ${x[1]}`;
-              }
-            })
-            .join(" ");
+          ]);
+
           document.getElementById("time").innerHTML = `${str.substring(
             0,
             str.length
           )}`;
-          if (target - now < 1000 * 60 * 60 * 24) {
-            if (now - lst_update > 1000) {
+          if (target - now < flicker_time) {
+            if (now - lst_update > flicker_period) {
               lst_update = now;
               document.getElementById("time").style.color = (lst_color =
                 !lst_color)
