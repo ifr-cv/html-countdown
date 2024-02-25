@@ -1,0 +1,49 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # 确保获取完整的历史记录以便能创建新分支
+
+      - name: Checkout publish branch or create it if it doesn't exist
+        run: |
+          git checkout publish || git checkout -b publish
+          git reset origin/master --hard
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Run build script
+        run: python3 tools/build.py
+
+      - name: Tree ws
+        run: tree .
+
+      - name: Configure Git
+        run: |
+          git config --global user.email "ci@github.com"
+          git config --global user.name "Github CI"
+
+      - name: Update index.html on publish branch
+        run: |
+          tree .
+          git add build/index.html --force
+
+      - name: Commit and push to publish branch
+        run: |
+          git commit -m "Update index.html"
+          git push --force origin publish

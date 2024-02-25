@@ -52,7 +52,13 @@ def get_result_file(filepath: str):
 
 
 if __name__ == "__main__":
+    print("ROOT_DIR", ROOT_DIR)
+    print("SRC_DIR", SRC_DIR)
+    print("INDEX_FILE", INDEX_FILE)
+    print("DST_DIR", DST_DIR)
+    print("OUTPUT_FILE", OUTPUT_FILE)
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
-    open(OUTPUT_FILE, 'w+', encoding='utf-8').write(get_result_file(INDEX_FILE))
+    with open(OUTPUT_FILE, 'w+', encoding='utf-8') as f:
+        f.write(get_result_file(INDEX_FILE))
 else:
     raise ValueError("Can not import entry: build")
